@@ -30,7 +30,7 @@ namespace HHG.Pseudorandom.Runtime
 
         public static bool Roll(float shownChance, ChanceModel model, IRandom rng = null)
         {
-            IRandom source = GameRandom.OrDefault(rng);
+            IRandom source = Randomizer.OrDefault(rng);
 
             if (model == ChanceModel.TwoRollAverage)
             {

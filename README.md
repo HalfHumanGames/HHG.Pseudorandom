@@ -4,7 +4,7 @@ Cosmetic and procedural randomness doesn't need this package; `UnityEngine.Rando
 
 - [Setup](#setup)
 - [Which technique when](#which-technique-when)
-- [Core](#core): `GameRandom`, `RandomStream`, `RandomExtensions`, `SeedUtil`, `SystemRandomAdapter`
+- [Core](#core): `Randomizer`, `RandomStream`, `RandomExtensions`, `SeedUtil`, `SystemRandomAdapter`
 - [Project streams](#project-streams)
 - [Chance](#chance): `PrdChance`, `EntropyChance`, `AdaptiveChance`, `PityTimer`, `LossGuarantee`, `StreakAssist`, `DisplayedChance`
 - [Selection](#selection): `ShuffleBag<T>`, `HistoryPicker<T>`, `SpreadShuffle`, `DuplicateProtection`, `ContextualTable<T>`, `WeightedItem<T>`, `BagEntry<T>`
@@ -39,66 +39,66 @@ The package has no dependencies and compiles on Unity 2020.3+.
 | Wild damage swings | `VarianceRoll` | 3d6 vs d20 |
 | Catch-up help | `ContextualTable<T>` | Mario Kart 8 |
 
-Every roll method takes an optional `IRandom` as its last argument. Pass the stream that owns the outcome (see [Project streams](#project-streams)). If you pass nothing, it uses `GameRandom.Default`.
+Every roll method takes an optional `IRandom` as its last argument. Pass the stream that owns the outcome (see [Project streams](#project-streams)). If you pass nothing, it uses `Randomizer.Default`.
 
 ---
 
 ## Core
 
-### Why GameRandom
+### Why Randomizer
 - **One seed.** The same seed replays the same sequence of outcomes, and saving its state means a reload repeats them. XCOM: Enemy Unknown did this to make save-scumming pointless.
 - **Named streams.** Each system can roll on its own stream, derived from the seed and the stream's name (Slay the Spire uses a dozen). Extra rolls in one system never shift another, so seeds and bug reports keep reproducing.
 - **xoshiro128\*\* instead of `System.Random`.** Its state can be saved. `System.Random` seeds that differ by a fixed offset give correlated output (Slay the Spire 2 shipped with exactly this bug), and its algorithm can differ between runtimes. `UnityEngine.Random` is one global stream for the whole engine.
 - **Not thread-safe**, like `UnityEngine.Random`. Give worker threads their own `RandomStream` seeded with `SeedUtil.Derive`.
 
-### GameRandom
+### Randomizer
 The static source. It owns one seed, a default stream, and any named streams you ask for.
 
 ```csharp
 // Seed once, for example when a new playthrough starts
-GameRandom.InitState(SeedUtil.NewSeed());   // fresh random seed
-GameRandom.InitState(12345);                // int seed
-GameRandom.InitState("ABCD-1234");          // player-entered or daily seed
+Randomizer.InitState(SeedUtil.NewSeed());   // fresh random seed
+Randomizer.InitState(12345);                // int seed
+Randomizer.InitState("ABCD-1234");          // player-entered or daily seed
 
-ulong seed = GameRandom.Seed;               // show it so players can share seeds
+ulong seed = Randomizer.Seed;               // show it so players can share seeds
 
-RandomStream fallback = GameRandom.Default;
-RandomStream named = GameRandom.Stream("Example");   // created on first use, same object after that
+RandomStream fallback = Randomizer.Default;
+RandomStream named = Randomizer.Stream("Example");   // created on first use, same object after that
 
 // Convenience rolls on the Default stream
-float value = GameRandom.Value;             // [0, 1)
-float spread = GameRandom.Range(-2f, 2f);   // [min, max)
-int face = GameRandom.Range(1, 7);          // [min, max), max exclusive
-bool lucky = GameRandom.Chance(0.25f);
+float value = Randomizer.Value;             // [0, 1)
+float spread = Randomizer.Range(-2f, 2f);   // [min, max)
+int face = Randomizer.Range(1, 7);          // [min, max), max exclusive
+bool lucky = Randomizer.Chance(0.25f);
 
 // Library code: accept an optional IRandom and fall back to Default
-IRandom rng = GameRandom.OrDefault(null);
+IRandom rng = Randomizer.OrDefault(null);
 ```
 
 Fix one stream for a scripted sequence, then put it back exactly as it was:
 
 ```csharp
-using (GameRandom.Reseed("Example", 777))
+using (Randomizer.Reseed("Example", 777))
 {
     // every roll on this stream plays out the same way every time
-    bool scripted = GameRandom.Stream("Example").Chance(0.5f);
+    bool scripted = Randomizer.Stream("Example").Chance(0.5f);
 }
 // the stream continues its own sequence here
 
 // Spanning several frames: keep the handle and dispose it when the sequence ends
-System.IDisposable scope = GameRandom.Reseed("Example", 777);
+System.IDisposable scope = Randomizer.Reseed("Example", 777);
 scope.Dispose();
 ```
 
 Save and load (see [Saving](#saving)):
 
 ```csharp
-GameRandomState state = GameRandom.GetState();
-GameRandom.SetState(state);   // continues exactly where it left off
+RandomizerState state = Randomizer.GetState();
+Randomizer.SetState(state);   // continues exactly where it left off
 ```
 
 ### RandomStream
-One seedable generator with savable state. `GameRandom` hands these out; you can also create your own, for example per worker thread.
+One seedable generator with savable state. `Randomizer` hands these out; you can also create your own, for example per worker thread.
 
 ```csharp
 RandomStream stream = new RandomStream(42UL);     // or new RandomStream() for a random seed
@@ -117,7 +117,7 @@ bool wouldSucceed = preview.Chance(0.8f);
 Everything you can do with any `IRandom`. Note that `Range(float, float)` excludes the max, unlike `UnityEngine.Random.Range(float, float)`, and that a weight of 0 is never picked.
 
 ```csharp
-IRandom rng = GameRandom.Default;
+IRandom rng = Randomizer.Default;
 
 float f = rng.Value();                   // [0, 1)
 double d = rng.NextDouble();             // [0, 1), 53-bit precision
@@ -155,11 +155,11 @@ RandomStream childRng = new RandomStream(child);
 Lets existing APIs that take a `System.Random` draw from a stream, without changing them.
 
 ```csharp
-System.Random asSystem = GameRandom.Default.AsSystemRandom();   // cached per stream
+System.Random asSystem = Randomizer.Default.AsSystemRandom();   // cached per stream
 int roll = asSystem.Next(1, 7);
 
 // Same thing for any IRandom
-System.Random wrapped = new SystemRandomAdapter(GameRandom.Stream("Example"));
+System.Random wrapped = new SystemRandomAdapter(Randomizer.Stream("Example"));
 ```
 
 ---
@@ -171,13 +171,13 @@ The package has no opinion on which streams a game needs. Define them in your pr
 // In your game's code, not in this package
 public static class ProjectRandom
 {
-    public static RandomStream Combat => GameRandom.Stream("Combat");
-    public static RandomStream Rewards => GameRandom.Stream("Rewards");
-    public static RandomStream Cosmetic => GameRandom.Stream("Cosmetic");
+    public static RandomStream Combat => Randomizer.Stream("Combat");
+    public static RandomStream Rewards => Randomizer.Stream("Rewards");
+    public static RandomStream Cosmetic => Randomizer.Stream("Cosmetic");
 }
 ```
 
-Then pass them to rolls: `critPrd.Roll(critChance, ProjectRandom.Combat)`. A handful of streams is plenty; keep cosmetic rolls off the gameplay ones. The examples below use `GameRandom.Default` to stay self-contained.
+Then pass them to rolls: `critPrd.Roll(critChance, ProjectRandom.Combat)`. A handful of streams is plenty; keep cosmetic rolls off the gameplay ones. The examples below use `Randomizer.Default` to stay self-contained.
 
 ---
 
@@ -200,7 +200,7 @@ One yes/no outcome per roll. Keep one object **per actor per effect**, usually a
 - **Rules (from Dota):** only call `Roll` for attempts that could actually proc (not on cooldown, not against invalid targets), and never for previews or AI scoring.
 
 ```csharp
-IRandom rng = GameRandom.Default;
+IRandom rng = Randomizer.Default;
 PrdChance critPrd = new PrdChance();             // or [SerializeField] private PrdChance critPrd = new PrdChance();
 
 float critChance = 0.25f;                        // may change every attack; pass the current one
@@ -232,7 +232,7 @@ critPrd.Reset();
 EntropyChance evade = new EntropyChance();
 
 float evadeChance = 0.3f;
-bool evaded = evade.Roll(evadeChance, GameRandom.Default);   // ~every 3rd or 4th attempt, never 4 failures in a row
+bool evaded = evade.Roll(evadeChance, Randomizer.Default);   // ~every 3rd or 4th attempt, never 4 failures in a row
 
 evade.Reset();
 ```
@@ -246,7 +246,7 @@ evade.Reset();
 - **Avoid when:** the chance is under ~20%. The down step gets big, so a success is followed by several near-certain failures, which reads as a hidden cooldown. Also avoid it when you need a hard cap on bad luck; use `PityTimer`.
 
 ```csharp
-IRandom rng = GameRandom.Default;
+IRandom rng = Randomizer.Default;
 
 // 40% base, +10% after each miss, down step sized to keep the long-run rate at 40%
 AdaptiveChance drop = new AdaptiveChance(0.4f, 0.1f);
@@ -276,7 +276,7 @@ drop.Reset();
 - **Avoid when:** the outcome is common (above ~20%). `PrdChance` or a `ShuffleBag` fits better.
 
 ```csharp
-IRandom rng = GameRandom.Default;
+IRandom rng = Randomizer.Default;
 
 // Hearthstone Legendary: guaranteed within 40, and within the first 10 ever
 PityTimer legendary = new PityTimer(0.01f, hardPity: 40, firstSuccessBy: 10);
@@ -313,7 +313,7 @@ legendary.Reset();
 LossGuarantee featured = new LossGuarantee(0.5f);   // optional 2nd arg: losses before the guarantee (default 1)
 
 // Call once per win (for example after a PityTimer success)
-bool wanted = featured.RollWanted(GameRandom.Default);
+bool wanted = featured.RollWanted(Randomizer.Default);
 bool nextIsSafe = featured.IsGuaranteed;
 featured.Reset();
 ```
@@ -326,7 +326,7 @@ featured.Reset();
 - **Avoid when:** the hardest difficulty, PvP, or anything shared with opponents. If you don't want to raise the average rate, use `PrdChance` instead.
 
 ```csharp
-IRandom rng = GameRandom.Default;
+IRandom rng = Randomizer.Default;
 
 // +10% per miss, only for chances of 50%+, never above 95%
 StreakAssist assist = new StreakAssist(0.1f, minBaseChance: 0.5f, maxChance: 0.95f);
@@ -358,7 +358,7 @@ assist.Reset();
 - **Avoid when:** honest odds are a design pillar. `PrdChance` cuts streaks without changing the rate.
 
 ```csharp
-IRandom rng = GameRandom.Default;
+IRandom rng = Randomizer.Default;
 float shown = 0.9f;
 
 bool honest = DisplayedChance.Roll(shown, ChanceModel.OneRoll, rng);        // 90%
@@ -386,7 +386,7 @@ Pick items from a set. The stateful ones are `[Serializable]` and editable in th
 - **Avoid when:** the outcome is a single chance that changes every roll (use `PrdChance`), or players can track the bag and exploit it. Bigger bags or a partial refill make it harder to count.
 
 ```csharp
-IRandom rng = GameRandom.Default;
+IRandom rng = Randomizer.Default;
 
 ShuffleBag<string> bag = new ShuffleBag<string>(new[] { "A", "B", "C", "D" });
 string next = bag.Next(rng);
@@ -409,7 +409,7 @@ bag.Reset();   // next draw starts a fresh bag
 - **Avoid when:** exact frequencies matter (drop odds). History shifts picks toward rarely chosen items; use `ShuffleBag`. In Exclude mode, a `historySize` at or above the item count excludes everything, so it falls back to "anything but the last one".
 
 ```csharp
-IRandom rng = GameRandom.Default;
+IRandom rng = Randomizer.Default;
 
 // Exclude the last 2 picks entirely: good for voice lines and SFX
 HistoryPicker<string> lines = new HistoryPicker<string>(new[] { "Line 1", "Line 2", "Line 3" }, historySize: 2);
@@ -436,8 +436,8 @@ lines.ClearHistory();
 string[] sequence = { "A", "A", "A", "A", "B", "B", "C" };
 
 // Group by the string itself; jitter 0 = perfectly even, 0.5 = loose (default 0.1)
-var ordered = SpreadShuffle.Spread(sequence, x => x, GameRandom.Default);
-var even = SpreadShuffle.Spread(sequence, x => x, GameRandom.Default, jitter: 0f);
+var ordered = SpreadShuffle.Spread(sequence, x => x, Randomizer.Default);
+var even = SpreadShuffle.Spread(sequence, x => x, Randomizer.Default, jitter: 0f);
 ```
 
 ### DuplicateProtection
@@ -454,8 +454,8 @@ var owned = new System.Collections.Generic.HashSet<string> { "A" };
 // Ownership count per item; maxCopies 1 = uniques
 System.Func<string, int> ownedCount = x => owned.Contains(x) ? 1 : 0;
 
-string offer = DuplicateProtection.Pick(pool, ownedCount, 1, GameRandom.Default);
-string weightedOffer = DuplicateProtection.PickWeighted(pool, x => 1f, ownedCount, 1, GameRandom.Default);
+string offer = DuplicateProtection.Pick(pool, ownedCount, 1, Randomizer.Default);
+string weightedOffer = DuplicateProtection.PickWeighted(pool, x => 1f, ownedCount, 1, Randomizer.Default);
 var eligible = DuplicateProtection.Eligible(pool, ownedCount, 1);   // full pool once everything is owned
 ```
 
@@ -474,7 +474,7 @@ table.Add(0f,   new WeightedItem<string>("Heal", 3f), new WeightedItem<string>("
 table.Add(0.5f, new WeightedItem<string>("Heal", 1f), new WeightedItem<string>("Rare", 2f));
 
 float health = 0.3f;
-string reward = table.Pick(health, GameRandom.Default);   // uses the 0 table
+string reward = table.Pick(health, Randomizer.Default);   // uses the 0 table
 ContextBracket<string> bracket = table.BracketFor(0.8f);  // the 0.5 table
 ```
 
@@ -509,7 +509,7 @@ int copies = bagEntry.Copies;
 - **Avoid when:** the roll is meant to spike. Crits already provide spikes; a flat roll on top doubles the swing.
 
 ```csharp
-IRandom rng = GameRandom.Default;
+IRandom rng = Randomizer.Default;
 VarianceRoll roll = new VarianceRoll(2);    // or [SerializeField] for Inspector tuning
 
 float baseDamage = 10f;
@@ -525,13 +525,13 @@ float normal = VarianceRoll.Normal(100f, 15f, rng);      // unbounded tails: cla
 ---
 
 ## Saving
-`GameRandomState`, `RandomStreamState` and every stateful class are `[Serializable]`, so they work with `JsonUtility` and any save system built on it. Save `GameRandom`'s state and the technique objects together, so a reload repeats the same outcomes.
+`RandomizerState`, `RandomStreamState` and every stateful class are `[Serializable]`, so they work with `JsonUtility` and any save system built on it. Save `Randomizer`'s state and the technique objects together, so a reload repeats the same outcomes.
 
 ```csharp
 [System.Serializable]
 public class RandomSaveData
 {
-    public GameRandomState RandomState;
+    public RandomizerState RandomState;
     public PrdChance CritPrd;
     public PityTimer RarePity;
 }
@@ -542,12 +542,12 @@ PrdChance critPrd = new PrdChance();
 PityTimer rarePity = new PityTimer(0.05f, hardPity: 20);
 
 // Save
-RandomSaveData data = new RandomSaveData { RandomState = GameRandom.GetState(), CritPrd = critPrd, RarePity = rarePity };
+RandomSaveData data = new RandomSaveData { RandomState = Randomizer.GetState(), CritPrd = critPrd, RarePity = rarePity };
 string json = UnityEngine.JsonUtility.ToJson(data);
 
 // Load
 RandomSaveData loaded = UnityEngine.JsonUtility.FromJson<RandomSaveData>(json);
-GameRandom.SetState(loaded.RandomState);
+Randomizer.SetState(loaded.RandomState);
 critPrd = loaded.CritPrd;
 rarePity = loaded.RarePity;
 ```

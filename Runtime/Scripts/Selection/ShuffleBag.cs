@@ -40,7 +40,7 @@ namespace HHG.Pseudorandom.Runtime
 
         public T Next(IRandom rng = null)
         {
-            rng = GameRandom.OrDefault(rng);
+            rng = Randomizer.OrDefault(rng);
 
             if (bag.Count <= refillAt)
             {

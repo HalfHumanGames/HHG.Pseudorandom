@@ -29,7 +29,7 @@ namespace HHG.Pseudorandom.Runtime
             // Chance on the Nth attempt since the last success is C * N
             attempts++;
             float chance = ConstantFor(nominalChance) * attempts;
-            bool success = GameRandom.OrDefault(rng).Value() < chance;
+            bool success = Randomizer.OrDefault(rng).Value() < chance;
 
             if (success)
             {

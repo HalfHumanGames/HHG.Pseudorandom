@@ -32,7 +32,7 @@ namespace HHG.Pseudorandom.Runtime
 
         public static float Average01(int rolls, IRandom rng = null)
         {
-            IRandom source = GameRandom.OrDefault(rng);
+            IRandom source = Randomizer.OrDefault(rng);
             int count = Math.Max(1, rolls);
             float sum = 0f;
 
@@ -47,7 +47,7 @@ namespace HHG.Pseudorandom.Runtime
         public static float Normal(float mean, float standardDeviation, IRandom rng = null)
         {
             // Box-Muller; u1 is in (0, 1] so Log never sees 0
-            IRandom source = GameRandom.OrDefault(rng);
+            IRandom source = Randomizer.OrDefault(rng);
             double u1 = 1.0 - source.NextDouble();
             double u2 = source.NextDouble();
             double z = Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Cos(2.0 * Math.PI * u2);

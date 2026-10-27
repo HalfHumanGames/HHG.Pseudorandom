@@ -47,7 +47,7 @@ namespace HHG.Pseudorandom.Runtime
                 throw new InvalidOperationException("ContextualTable has no brackets.");
             }
 
-            return GameRandom.OrDefault(rng).PickWeighted(bracket.Items, item => item.Weight).Item;
+            return Randomizer.OrDefault(rng).PickWeighted(bracket.Items, item => item.Weight).Item;
         }
     }
 }

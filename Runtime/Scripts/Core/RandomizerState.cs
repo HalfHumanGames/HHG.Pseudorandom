@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace HHG.Pseudorandom.Runtime
 {
     [Serializable]
-    public class GameRandomState
+    public class RandomizerState
     {
         public ulong Seed;
         public RandomStreamState Default;

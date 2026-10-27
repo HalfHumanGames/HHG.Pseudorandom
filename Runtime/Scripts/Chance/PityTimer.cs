@@ -77,7 +77,7 @@ namespace HHG.Pseudorandom.Runtime
 
         public bool Roll(float baseChanceOverride, IRandom rng = null)
         {
-            bool success = GameRandom.OrDefault(rng).Value() < NextChance(baseChanceOverride);
+            bool success = Randomizer.OrDefault(rng).Value() < NextChance(baseChanceOverride);
 
             if (success)
             {

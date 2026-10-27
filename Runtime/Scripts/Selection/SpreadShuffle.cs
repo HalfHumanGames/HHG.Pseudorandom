@@ -7,7 +7,7 @@ namespace HHG.Pseudorandom.Runtime
     {
         public static List<T> Spread<T, TKey>(IEnumerable<T> items, Func<T, TKey> category, IRandom rng = null, float jitter = 0.1f)
         {
-            rng = GameRandom.OrDefault(rng);
+            rng = Randomizer.OrDefault(rng);
 
             // Grouped in first-seen order so results are deterministic per seed
             Dictionary<TKey, List<T>> groups = new Dictionary<TKey, List<T>>();

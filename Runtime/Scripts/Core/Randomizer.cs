@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
 
+
 namespace HHG.Pseudorandom.Runtime
 {
-    public static class GameRandom
+    public static class Randomizer
     {
         private const string defaultStreamName = "Default";
 
@@ -11,7 +12,7 @@ namespace HHG.Pseudorandom.Runtime
         private static RandomStream defaultStream;
         private static ulong seed;
 
-        static GameRandom()
+        static Randomizer()
         {
             InitState(SeedUtil.NewSeed());
         }
@@ -31,7 +32,7 @@ namespace HHG.Pseudorandom.Runtime
 
         public static void InitState(int newSeed)
         {
-            InitState((ulong)(uint)newSeed);
+            InitState((uint)newSeed);
         }
 
         public static void InitState(string seedText)
@@ -88,9 +89,9 @@ namespace HHG.Pseudorandom.Runtime
             return defaultStream.Chance(chance);
         }
 
-        public static GameRandomState GetState()
+        public static RandomizerState GetState()
         {
-            GameRandomState state = new GameRandomState
+            RandomizerState state = new RandomizerState
             {
                 Seed = seed,
                 Default = defaultStream.GetState()
@@ -104,7 +105,7 @@ namespace HHG.Pseudorandom.Runtime
             return state;
         }
 
-        public static void SetState(GameRandomState state)
+        public static void SetState(RandomizerState state)
         {
             if (state == null)
             {

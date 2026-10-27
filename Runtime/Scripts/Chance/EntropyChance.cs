@@ -23,7 +23,7 @@ namespace HHG.Pseudorandom.Runtime
 
             if (entropy < 0f)
             {
-                entropy = GameRandom.OrDefault(rng).Value();
+                entropy = Randomizer.OrDefault(rng).Value();
             }
 
             // Exactly one success each time the accumulated chance passes 1

@@ -28,13 +28,13 @@ namespace HHG.Pseudorandom.Runtime
 
         public static T Pick<T>(IList<T> pool, Func<T, int> ownedCount, int maxCopies = 1, IRandom rng = null)
         {
-            return GameRandom.OrDefault(rng).Pick(Eligible(pool, ownedCount, maxCopies));
+            return Randomizer.OrDefault(rng).Pick(Eligible(pool, ownedCount, maxCopies));
         }
 
         public static T PickWeighted<T>(IList<T> pool, Func<T, float> weight, Func<T, int> ownedCount, int maxCopies = 1, IRandom rng = null)
         {
             List<T> eligible = Eligible(pool, ownedCount, maxCopies);
-            IRandom source = GameRandom.OrDefault(rng);
+            IRandom source = Randomizer.OrDefault(rng);
             int index = source.WeightedIndex(eligible, weight);
 
             // Every eligible item has weight 0: fall back to the full pool by weight

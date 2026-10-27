@@ -26,7 +26,7 @@ namespace HHG.Pseudorandom.Runtime
 
         public bool RollWanted(IRandom rng = null)
         {
-            bool wanted = IsGuaranteed || GameRandom.OrDefault(rng).Value() < wantedChance;
+            bool wanted = IsGuaranteed || Randomizer.OrDefault(rng).Value() < wantedChance;
             losses = wanted ? 0 : losses + 1;
             return wanted;
         }

@@ -39,7 +39,7 @@ namespace HHG.Pseudorandom.Runtime
 
         public bool Roll(float baseChance, IRandom rng = null)
         {
-            bool hit = GameRandom.OrDefault(rng).Value() < Adjust(baseChance);
+            bool hit = Randomizer.OrDefault(rng).Value() < Adjust(baseChance);
             Report(hit);
             return hit;
         }

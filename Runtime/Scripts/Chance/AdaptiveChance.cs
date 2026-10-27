@@ -39,7 +39,7 @@ namespace HHG.Pseudorandom.Runtime
         public bool Roll(float nominalChance, IRandom rng = null)
         {
             float chance = Clamp(nominalChance + offset, minChance, maxChance);
-            bool success = GameRandom.OrDefault(rng).Value() < chance;
+            bool success = Randomizer.OrDefault(rng).Value() < chance;
 
             offset += success ? -StepDown(nominalChance) : stepUp;
 
