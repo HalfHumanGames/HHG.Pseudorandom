@@ -1,0 +1,24 @@
+{
+  "name": "com.halfhumangames.pseudorandom",
+  "version": "1.0.0",
+  "displayName": "HHG - Pseudorandom",
+  "description": "Seedable, savable GameRandom plus randomness techniques that feel fair: shuffle bags, PRD, pity timers, entropy, 2RN and more",
+  "unity": "2020.3",
+  "unityRelease": "6f1",
+  "documentationUrl": "https://github.com/HalfHumanGames/HHG.Pseudorandom/blob/main/README.md",
+  "changelogUrl": "https://github.com/HalfHumanGames/HHG.Pseudorandom/blob/main/CHANGELOG.md",
+  "licensesUrl": "https://github.com/HalfHumanGames/HHG.Pseudorandom/blob/main/LICENSE",
+  "keywords": [
+    "Random",
+    "RNG",
+    "PRD",
+    "Shuffle Bag",
+    "Pity"
+  ],
+  "author": {
+    "name": "Half Human Games",
+    "email": "contact@halfhumangames.com",
+    "url": "https://github.com/HalfHumanGames"
+  },
+  "dependencies": {}
+}
